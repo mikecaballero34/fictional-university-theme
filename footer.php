@@ -3,7 +3,7 @@
         <div class="group">
             <div class="site-footer__col-one">
                 <h1 class="school-logo-text school-logo-text--alt-color">
-                    <a href="<?=site_url();?>">
+                    <a href="<?= site_url(); ?>">
                         <strong>Fictional</strong>
                         University
                     </a>
@@ -15,12 +15,12 @@
                 <div class="site-footer__col-two">
                     <h3 class="headline headline--small">Explore</h3>
                     <nav class="nav-list">
-                        <!--<ul>
-                            <li><a href="<?=site_url('/about-us');?>">About Us</a></li>
+                        <ul>
+                            <li><a href="<?= home_url('/about-us'); ?>">About Us</a></li>
                             <li><a href="#">Programs</a></li>
                             <li><a href="#">Events</a></li>
                             <li><a href="#">Campuses</a></li>
-                        </ul>-->
+                        </ul>
                     </nav>
                 </div>
 
@@ -29,7 +29,7 @@
                     <nav class="nav-list">
                         <ul>
                             <li><a href="#">Legal</a></li>
-                            <li><a href="<?=site_url('/privacy-policy');?>">Privacy</a></li>
+                            <li><a href="<?= site_url('/privacy-policy'); ?>">Privacy</a></li>
                             <li><a href="#">Careers</a></li>
                         </ul>
                     </nav>
@@ -76,4 +76,5 @@
 </div>
 <?php wp_footer(); ?>
 </body>
+
 </html>

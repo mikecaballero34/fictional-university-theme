@@ -2,18 +2,16 @@
 
 get_header();
 
-while(have_posts()) {
-    the_post(); ?>
+while (have_posts()) {
+    the_post();
 
-    <div class="page-banner">
-        <div class="page-banner__bg-image" style="background-image: url(<?=get_theme_file_uri('/images/ocean.jpg');?>)"></div>
-        <div class="page-banner__content container container--narrow">
-            <h1 class="page-banner__title"><?php the_title(); ?></h1>
-            <div class="page-banner__intro">
-                <p>Learn how the school of your dreams got started.</p>
-            </div>
-        </div>
-    </div>
+    $pageBannerImage = get_field('page_banner_background_image')['url'] ?? get_theme_file_uri('/images/ocean.jpg');
+
+    get_template_part('template-parts/banner', '', [
+        'title'     => get_the_title(),
+        'subtitle'  => get_field('page_banner_subtitle'),
+        'image'     => $pageBannerImage
+    ]); ?>
 
     <div class="container container--narrow page-section">
 
@@ -30,19 +28,19 @@ while(have_posts()) {
         <?php
         $relatedProgramas = get_field('related_programs');
 
-        if( $relatedProgramas ) {
+        if ($relatedProgramas) {
             echo '<hr class="section-break">';
             echo '<h2 class="headline headline--medium">Subject(s) Taught</h2>';
             echo '<ul class="link-list min-list">';
-            foreach ( $relatedProgramas as $program ) { ?>
-                <li><a href="<?=get_the_permalink($program);?>"><?=get_the_title($program);?></a></li>
-                <?php
+            foreach ($relatedProgramas as $program) { ?>
+                <li><a href="<?= get_the_permalink($program); ?>"><?= get_the_title($program); ?></a></li>
+        <?php
             }
             echo '</ul>';
         }
         ?>
     </div>
 
-    <?php
+<?php
 }
 get_footer();
