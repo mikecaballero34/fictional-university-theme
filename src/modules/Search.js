@@ -51,6 +51,7 @@ class Search {
     getResults() {
 
         $.getJSON(universityData.root_url + '/wp-json/university/v1/search?term=' + this.searchField.val(), (results) => {
+
             this.resultsDiv.html(`
                 <div class="row">
                     <div class="one-third">
@@ -58,27 +59,27 @@ class Search {
                         ${results.generalInfo.length ? `
                             <ul class="link-list min-list">
                                 ${results.generalInfo.map(item =>
-                                    `<li>
+                `<li>
                                         <a href="${item.link}">${item.title}</a>
                                         ${item.postType === 'post' ? ` by ${item.authorName}` : ''} 
                                     </li>`
-                                ).join('')}
+            ).join('')}
                             </ul>` :
-                            `<p>No general information matches that search.</p>`
-                        }
+                    `<p>No general information matches that search.</p>`
+                }
                     </div>
                     <div class="one-third">
                         <h2 class="search-overlay__section-title">Programs</h2>
                         ${results.program.length ? `
                             <ul class="link-list min-list">
                                 ${results.program.map(item =>
-                                    `<li>
+                    `<li>
                                         <a href="${item.link}">${item.title}</a>
                                     </li>`
-                                ).join('')}
+                ).join('')}
                             </ul>` :
-                            `<p>No programs matches that search. <a href="${universityData.root_url}/programs">View all programs.</a></p>`
-                        }
+                    `<p>No programs matches that search. <a href="${universityData.root_url}/programs">View all programs.</a></p>`
+                }
                         <h2 class="search-overlay__section-title">Professors</h2>
                         ${results.professor.length ? `
                             <ul class="professor-cards">
@@ -89,27 +90,27 @@ class Search {
                                             <span class="professor-card__name">${item.title}</span>
                                         </a>
                                     </li>`
-                                ).join('')}
+                ).join('')}
                             </ul>` :
-                            `<p>No professors matches that search.</p>`
-                        }
+                    `<p>No professors matches that search.</p>`
+                }
                     </div>
                     <div class="one-third">
                         <h2 class="search-overlay__section-title">Campuses</h2>
                         ${results.campus.length ? `
                             <ul class="link-list min-list">
                                 ${results.campus.map(item =>
-                                    `<li>
-                                        <a href="${item.link}">${item.title}</a>
+                    `<li>
+                                        <a href="${item.permalink}">${item.title}</a>
                                     </li>`
-                                ).join('')}
+                ).join('')}
                             </ul>` :
-                            `<p>No campuses matches that search. <a href="${universityData.root_url}/campuses">View all campuses.</a></p>`
-                        }
+                    `<p>No campuses matches that search. <a href="${universityData.root_url}/campuses">View all campuses.</a></p>`
+                }
                         <h2 class="search-overlay__section-title">Events</h2>
                         ${results.event.length ? `
                                 ${results.event.map(item =>
-                                    `<div class="event-summary">
+                    `<div class="event-summary">
                                         <a class="event-summary__date t-center" href="${item.permalink}">
                                             <span class="event-summary__month">
                                                 ${item.month}
@@ -123,10 +124,10 @@ class Search {
                                             <p>${item.content} <a href="${item.permalink}" class="nu gray">Learn more</a></p>
                                         </div>
                                     </div>`
-                                ).join('')}
+                ).join('')}
                             ` :
-                            `<p>No events matches that search. <a href="${universityData.root_url}/campuses">View all events.</a></p>`
-                        }
+                    `<p>No events matches that search. <a href="${universityData.root_url}/campuses">View all events.</a></p>`
+                }
                     </div>
                 </div>
             `);

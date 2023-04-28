@@ -18,10 +18,10 @@
                 'post_type'         => 'event',
                 'posts_per_page'    => 2,
                 'post_status'       => 'publish',
-                'orderby'           => 'meta_value_num',
+                /*'orderby'           => 'meta_value_num',
                 'meta_key'          => 'event_date',
                 'order'             => 'ASC',
-                /* Return only events where the event_date is greater than or equal to today's date
+                 Return only events where the event_date is greater than or equal to today's date
                     'meta_query'        => [
                         [
                             'key'       => 'event_date',

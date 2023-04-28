@@ -15,8 +15,10 @@ function university_files()
     // JAVASCRIPT
 
     wp_enqueue_script('university-main-code', get_theme_file_uri('/build/index.js'), ['jquery'], '1.0', true);
+
     wp_localize_script('university-main-code', 'universityData', [
-        'root_url'  => get_site_url()
+        'root_url'  => get_site_url(),
+        'nonce'     => wp_create_nonce('wp_rest')
     ]);
 }
 // Add css and js files into the theme
@@ -58,10 +60,10 @@ add_filter('excerpt_more', 'custom_excerpt_end');
 function university_adjust_querys($query)
 {
     if (!is_admin() && is_post_type_archive('event') && $query->is_main_query()) {
-        $query->set('meta_key', 'event_date');
+        /*$query->set('meta_key', 'event_date');
         $query->set('orderby', 'meta_value_num');
         $query->set('order', 'ASC');
-        /*
+        
          Return only events where the event_date is greater than or equal to today's date
          $query->set('meta_query', [
             [
@@ -88,11 +90,16 @@ add_action('pre_get_posts', 'university_adjust_querys');
 
 function university_custom_rest()
 {
-
     // Add extra field to REST API
     register_rest_field('post', 'authorName', [
         'get_callback'  =>  function () {
             return get_the_author();
+        }
+    ]);
+
+    register_rest_field('note', 'userNoteCount', [
+        'get_callback'  =>  function () {
+            return count_user_posts(get_current_user_id(), 'note');
         }
     ]);
 }
@@ -111,6 +118,8 @@ function university_post_types()
             'editor',
             'excerpt'
         ],
+        'capability_type'   => 'event',
+        'map_meta_cap'      => true,
         'rewrite'       => [
             'slug'  => 'events'
         ],
@@ -134,6 +143,8 @@ function university_post_types()
             'editor',
             'excerpt'
         ],
+        'capability_type'   => 'campus',
+        'map_meta_cap'      => true,
         'rewrite'       => [
             'slug'  => 'campuses'
         ],
@@ -191,6 +202,100 @@ function university_post_types()
         ],
         'menu_icon'     => 'dashicons-welcome-learn-more'
     ]);
+
+    // Note post type
+    register_post_type('note', [
+        'capability_type'   => 'note',
+        'map_meta_cap'      => true,
+        'supports'      => [
+            'title',
+            'editor'
+        ],
+        'has_archive'   => false,
+        'public'        => false,
+        'show_ui'       => true,
+        'show_in_rest'  => true,
+        'labels'    => [
+            'name'          => 'Notes',
+            'add_new'       => 'Add New Note',
+            'edit_item'     => 'Edit Note',
+            'all_items'     => 'All Notes',
+            'singular_name' => 'Note'
+        ],
+        'menu_icon'     => 'dashicons-welcome-write-blog'
+    ]);
 }
 
 add_action('init', 'university_post_types');
+
+
+//Redirect subscriber accounts out of admin and onto homepage
+
+function redirectSubsToFrontend()
+{
+    $currentUser = wp_get_current_user();
+    if (count($currentUser->roles) == 1 && $currentUser->roles[0] === 'subscriber') {
+        wp_redirect(home_url('/'));
+        exit;
+    }
+}
+
+add_action('admin_init', 'redirectSubsToFrontend');
+
+function noSubsAdminBar()
+{
+    $currentUser = wp_get_current_user();
+    if (count($currentUser->roles) == 1 && $currentUser->roles[0] === 'subscriber') {
+        show_admin_bar(false);
+    }
+}
+
+add_action('wp_loaded', 'noSubsAdminBar');
+
+// Customize login screen
+
+function ourHeaderUrl()
+{
+    return esc_url(home_url());
+}
+
+add_filter('login_headerurl', 'ourHeaderUrl');
+
+// Customize login logo
+
+function ourLoginCss()
+{
+    wp_enqueue_style('google-font', '//fonts.googleapis.com/css?family=Roboto+Condensed:300,300i,400,400i,700,700i|Roboto:100,300,400,400i,700,700i');
+    wp_enqueue_style('font-awesome', '//maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css');
+    wp_enqueue_style('university-main-styles', get_theme_file_uri('/build/style-index.css'));
+    wp_enqueue_style('university-extra-styles', get_theme_file_uri('/build/index.css'));
+}
+
+add_action('login_enqueue_scripts', 'ourLoginCss');
+
+function ourLoginTitle()
+{
+    return get_bloginfo('name');
+}
+add_filter('login_headertext', 'ourLoginTitle');
+
+// Force note posts to be private and sanitize fields
+add_filter('wp_insert_post_data', 'makeNotePrivate', 10, 2);
+
+function makeNotePrivate($data, $postarr)
+{
+    if ($data['post_type']  === 'note') {
+
+        if (count_user_posts(get_current_user_id(), 'note') >= 5 && !$postarr['ID']) {
+            die("You have reached your note limit.");
+        }
+
+        $data['post_content'] = sanitize_textarea_field($data['post_content']);
+        $data['post_title'] = sanitize_text_field($data['post_title']);
+    }
+    if ($data['post_type'] === 'note' && $data['post_status'] !== 'trash') {
+        $data['post_status'] = "private";
+    }
+
+    return $data;
+}

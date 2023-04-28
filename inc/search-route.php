@@ -1,6 +1,7 @@
 <?php
 
-function university_register_search() {
+function university_register_search()
+{
     register_rest_route('university/v1', 'search', [
         'methods'   => WP_REST_Server::READABLE,
         'callback'  => 'university_search_results'
@@ -9,25 +10,27 @@ function university_register_search() {
 
 add_action('rest_api_init', 'university_register_search');
 
-function university_search_results( $data): array {
+function university_search_results($data): array
+{
 
     $mainQuery = new WP_Query([
-        'post_type'     => ['post', 'page', 'professor', 'program', 'campus', 'event'],
-        's'             => sanitize_text_field($data['term'])
+        'post_type'         => ['post', 'page', 'professor', 'program', 'campus', 'event'],
+        's'                 => sanitize_text_field($data['term']),
+        'posts_per_page'    => -1
     ]);
 
     $results = [
         'generalInfo'   => [],
-        'professor'    => [],
-        'program'      => [],
-        'event'        => [],
-        'campus'      => []
+        'professor'     => [],
+        'program'       => [],
+        'event'         => [],
+        'campus'        => []
     ];
 
-    while( $mainQuery->have_posts() ) {
+    while ($mainQuery->have_posts()) {
         $mainQuery->the_post();
 
-        if( get_post_type() === 'post' || get_post_type() === 'page' ) {
+        if (get_post_type() == 'post' || get_post_type() == 'page') {
             $results['generalInfo'][] = [
                 'title'     => get_the_title(),
                 'permalink' => get_the_permalink(),
@@ -37,8 +40,8 @@ function university_search_results( $data): array {
         } else {
             $month = get_the_date('M');
             $day = get_the_date('d');
-            if( get_post_type() == 'event' ) {
-                $eventDate = new DateTime( get_field('event_date') );
+            if (get_post_type() == 'event') {
+                $eventDate = new DateTime(get_field('event_date'));
                 $month = $eventDate->format('M');
                 $day = $eventDate->format('d');
             }
@@ -56,19 +59,37 @@ function university_search_results( $data): array {
 
     wp_reset_postdata();
 
-    // This code is for relate professors if user search a program
+    // This code is for related professors if user search a program
 
-    if( $results['program'] ) {
+    if ($results['program']) {
         $programsMetaQuery = [
             'relation'  => 'OR'
         ];
 
-        foreach( $results['program'] as $program ) {
+        foreach ($results['program'] as $program) {
             $programsMetaQuery[] = [
                 'key' => 'related_programs',
                 'compare' => 'LIKE',
                 'value' => '"' . $program['id'] . '"'
             ];
+
+            $relatedCampuses = get_field('related_campuses', $program['id']);
+
+            if ($relatedCampuses) {
+                foreach ($relatedCampuses as $campus) {
+                    $month = get_the_date('M', $campus);
+                    $day = get_the_date('d', $campus);
+                    $results['campus'][] = [
+                        'id'        => get_the_ID($campus),
+                        'title'     => get_the_title($campus),
+                        'permalink' => get_the_permalink($campus),
+                        'thumbnail' => get_the_post_thumbnail_url($campus->ID, 'professorLandscape'),
+                        'month'     => $month,
+                        'day'       => $day,
+                        'content'   => get_the_excerpt($campus)
+                    ];
+                }
+            }
         }
 
         $professorRelationshipQuery = new WP_Query([
@@ -76,19 +97,20 @@ function university_search_results( $data): array {
             'meta_query'    => $programsMetaQuery
         ]);
 
-        while( $professorRelationshipQuery->have_posts() ) {
+        while ($professorRelationshipQuery->have_posts()) {
             $professorRelationshipQuery->the_post();
 
             $month = get_the_date('M');
             $day = get_the_date('d');
-            if( get_post_type() == 'event' ) {
-                $eventDate = new DateTime( get_field('event_date') );
+            if (get_post_type() == 'event') {
+                $eventDate = new DateTime(get_field('event_date'));
                 $month = $eventDate->format('M');
                 $day = $eventDate->format('d');
             }
 
             $results[get_post_type()][] = [
-                'title' => get_the_title(),
+                'id'        => get_the_ID(),
+                'title'     => get_the_title(),
                 'permalink' => get_the_permalink(),
                 'thumbnail' => get_the_post_thumbnail_url(0, 'professorLandscape'),
                 'month'     => $month,
@@ -96,10 +118,11 @@ function university_search_results( $data): array {
                 'content'   => get_the_excerpt()
             ];
         }
-
-        $results['professor'] = array_values(array_unique( $results['professor'], SORT_REGULAR ));
-        $results['event'] = array_values(array_unique( $results['event'], SORT_REGULAR ));
     }
+
+    $results['professor'] = array_values(array_unique($results['professor'], SORT_REGULAR));
+    $results['event'] = array_values(array_unique($results['event'], SORT_REGULAR));
+    $results['campus'] = array_values(array_unique($results['campus'], SORT_REGULAR));
 
     return $results;
 }
