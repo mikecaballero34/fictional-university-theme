@@ -21,6 +21,41 @@ while (have_posts()) {
                     <?php the_post_thumbnail('professorPortrait'); ?>
                 </div>
                 <div class="two-third">
+                    <?php
+                    $likeCount = new WP_Query([
+                        'post_type'     => 'like',
+                        'meta_query'    => [
+                            [
+                                'key'       => 'like_professor_id',
+                                'field'     => '=',
+                                'value'     => get_the_ID()
+                            ]
+                        ]
+                    ]);
+
+                    $existStatus = 'no';
+                    $likeId = false;
+                    if (is_user_logged_in()) {
+                        $existQuery = new WP_Query([
+                            'post_type'     => 'like',
+                            'author'        => get_current_user_id(),
+                            'meta_query'    => [
+                                [
+                                    'key'       => 'like_professor_id',
+                                    'field'     => '=',
+                                    'value'     => get_the_ID()
+                                ]
+                            ]
+                        ]);
+
+                        $existStatus = $existQuery->found_posts > 0 ? 'yes' : $existStatus;
+                        $likeId = $existQuery->have_posts() ? $existQuery->posts[0]->ID : $likeId;
+                    } ?>
+                    <span class="like-box" data-exists="<?= $existStatus; ?>" data-professor="<?php the_ID(); ?>" data-like="<?= $likeId; ?>">
+                        <i class="fa fa-heart-o" aria-hidden="true"></i>
+                        <i class="fa fa-heart" aria-hidden="true"></i>
+                        <span class="like-count"><?= $likeCount->found_posts; ?></span>
+                    </span>
                     <?php the_content(); ?>
                 </div>
             </div>
